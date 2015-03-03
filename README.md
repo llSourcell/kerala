@@ -6,17 +6,14 @@
 
 > An IPFS wrapper for string storage and retrieval 
 
-Kerala offers a an easy-to-use SDK to store, retrieve, and link strings via IPFS. 
+Kerala offers a an easy-to-use SDK to store and retrieve links on the Interplanetary File System. (IPFS) I created this library to aid me in creating a decentralized twitter. It can be used for any sort of decentralized application that stores user tweets/posts/microblogs.
 
-Kerala allows you
+Kerala
 
-Bower offers a generic, unopinionated solution to the problem of **front-end package management**, while exposing the package dependency model via an API that can be consumed by a more opinionated build stack. There are no system wide dependencies, no dependencies are shared between different apps, and the dependency tree is flat.
-
-Bower runs over Git, and is package-agnostic. A packaged component can be made up of any type of asset, and use any type of transport (e.g., AMD, CommonJS, etc.).
-
-**View complete docs on [bower.io](http://bower.io)**
-
-[View all packages available through Bower's registry](http://bower.io/search/).
+-Converts a user's string input into an IPFS Hash
+-Saves the hash to a text file locally
+-Takes new string submissions with their associated hashes and links them. It will replace the hash in the local text file with the newest hash, thus creating what is known in IPFS as a MerkleDAG. 
+-Pulls all users strings using only there single hash stored in their local textfile. The MerkleDAG link in IPFS allows the user to pull all linked strings in a single request
 
 ## Install
 
@@ -27,3 +24,4 @@ $ go get -u github.com/siraj/go-kerala/kerala
 Kerala depends on [IPFS](https://github.com/jbenet/go-ipfs). 
 
 ## Usage
+
