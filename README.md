@@ -2,11 +2,11 @@
 
 
 
-<img align="right" height="300" src="http://bestclipartblog.com/clipart-pics/palm-tree-clip-art-5.gif">
+<img align="right" height="300" src="http://i180.photobucket.com/albums/x247/Mandee_Candee/Palm-Tree-cartoon.gif">
 
 > An IPFS wrapper for string storage and retrieval 
 
-Kerala offers a an easy-to-use SDK to store and retrieve links on the Interplanetary File System. (IPFS) I created this library to aid me in creating a decentralized twitter. It can be used for any sort of decentralized application that stores user tweets/posts/microblogs.
+Kerala offers a an easy-to-use wrapper to store and retrieve links on the Interplanetary File System. (IPFS) I created this library to aid me in creating a decentralized twitter. It can be used for any sort of decentralized application that stores user tweets/posts/microblogs.
 
 Kerala
 
