@@ -6,7 +6,7 @@
 
 > An IPFS wrapper for string storage and retrieval 
 
-Kerala offers a an easy-to-use wrapper to store and retrieve links on the Interplanetary File System. (IPFS) I created this library to aid me in creating a decentralized twitter. It can be used for any sort of decentralized application that stores user tweets/posts/microblogs.
+Kerala offers a an easy-to-use SDK to store and retrieve links on the Interplanetary File System. (IPFS) I created this library to aid me in creating a decentralized twitter. It can be used for any sort of decentralized application that stores user tweets/posts/microblogs.
 
 Kerala
 
@@ -25,10 +25,18 @@ Kerala depends on [IPFS](https://github.com/jbenet/go-ipfs).
 
 ## Usage
 
-'''go
-Start a node
+```go
+//Start a node
 node, err := kerala.StartNode()
 	if err != nil {
 		panic(err)
 	}
-'''
+
+//Add your text to IPFS (Creates MerkleDAG)
+var userInput = r.Form["sometext"]
+Key, err := kerala.AddString(node, userInput[0])
+
+//Get all your text from IPFS (Retrieves MerkleDAG)  
+tweetArray, _ := kerala.GetStrings(node)
+  
+```
