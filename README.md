@@ -11,6 +11,7 @@ Kerala offers a an easy-to-use SDK to store and retrieve links on the Interplane
 Kerala
 
 -Converts a user's string input into an IPFS Hash
+
 -Saves the hash to a text file locally
 -Takes new string submissions with their associated hashes and links them. It will replace the hash in the local text file with the newest hash, thus creating what is known in IPFS as a MerkleDAG. 
 -Pulls all users strings using only there single hash stored in their local textfile. The MerkleDAG link in IPFS allows the user to pull all linked strings in a single request
