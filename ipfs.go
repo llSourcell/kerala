@@ -14,6 +14,10 @@ import (
 "io/ioutil"
 "encoding/hex"
 "encoding/json"
+commands "github.com/jbenet/go-ipfs/core/commands"
+
+
+
 	
 	
 
@@ -35,35 +39,38 @@ func StartNode() (*core.IpfsNode, error) {
     node, err := builder.Build(ctx)
     if err != nil {
        return nil, err
-    }
-    fmt.Printf("I am peer: %s\n", node.Identity)
+    }	
 	return node, nil
 }
 
+
+
 func GetStrings(node *core.IpfsNode, userID string) ([]string, error) {
 	
-	f,err := ioutil.ReadFile("output.html")
-	if err != nil {
-		return nil, err
-	}
-	if string(f) == "" {
-		return nil, nil
-	} else {
-		if(userID == "") {
-			var Key = u.B58KeyDecode(string(f))
-		    var tweetArray = resolveAllInOrder(node,Key)
-			return tweetArray, nil
-			
-			
-		} else {
+//	f,err := ioutil.ReadFile("output.html")
+	
+	
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// if string(f) == "" {
+	// 	return nil, nil
+	// } else {
+		// if(userID == "") {
+		// 	var Key = u.B58KeyDecode(string(f))
+		//     var tweetArray = resolveAllInOrder(node,Key)
+		// 	return tweetArray, nil
+		//
+		//
+		// } else {
 			var Key = u.B58KeyDecode(userID)
 		    var tweetArray = resolveAllInOrder(node,Key)
 			return tweetArray, nil
 			
 			
 			
-		}
-	}
+			//}
+//	}
 	
 }
 
@@ -85,12 +92,10 @@ func resolveAllInOrder(nd * core.IpfsNode, k u.Key) []string {
 		var err error
 
 		if len(node.Links) == 0 {
-			fmt.Println("Links are 0")
 			break;
 		}
 
 		node, err = node.Links[0].GetNode(nd.DAG)
-		fmt.Printf("i pulled a node link %s", node)
 		if err != nil {
 			fmt.Println(err)
 			//return
@@ -109,12 +114,15 @@ func resolveAllInOrder(nd * core.IpfsNode, k u.Key) []string {
 func AddString(node *core.IpfsNode, inputString string) (u.Key, error) {
 	
 	//[1] Check if key is stored locally
-	f,err := ioutil.ReadFile("output.html")
- 	if err!=nil {
-  			return "", err
-  		}
-	//[2] If key is not stored locally, the user is new
-		if string(f) == "" {
+	// f,err := ioutil.ReadFile("output.html")
+	//  	if err!=nil {
+	//   			return "", err
+	//   		}
+		
+		pointsTo, err := node.Namesys.Resolve(node.Context(), node.Identity.Pretty())
+		
+		//If there is an error, user is new and hasn't yet created a DAG.
+		if err != nil {
 			//[3] Initialize a MerkleDAG node and key
 			var NewNode * merkledag.Node
 			var Key u.Key
@@ -122,37 +130,98 @@ func AddString(node *core.IpfsNode, inputString string) (u.Key, error) {
 			NewNode = makeStringNode(inputString)
 			//[5] Add the node to IPFS
 			Key, _ = node.DAG.Add(NewNode)
-			//[6] Add the user input key to local store
-			err := ioutil.WriteFile("output.html", []byte(Key.B58String()) , 0777)
+			// //publish to IPNS
+			output, err := commands.Publish(node, node.PrivateKey,Key.B58String())
 			if err != nil {
-				return "", err 
-			}
-			return Key, nil
+				fmt.Println(err)
 			} else {
-					//[7] Initialize a new MerkleDAG node and key
-					var NewNode * merkledag.Node
-					var Key u.Key
-					//[8] Fill the node with user input
-					NewNode = makeStringNode(inputString)
-					//[9] Read the hash from the file
-			 		f,err := ioutil.ReadFile("output.html")
-					//[10] Convert it into a key
-					Key = u.B58KeyDecode(string(f))
-					//[11] Get the Old MerkleDAG node and key
-					var OldNode * merkledag.Node
-					var Key2 u.Key
-					OldNode, _ = node.DAG.Get(Key)
-					//[12]Add a link to the old node
-			 		NewNode.AddNodeLink("next", OldNode)
-					//[13] Add thew new node to IPFS
-					Key2, _ = node.DAG.Add(NewNode)
-					//[14] Add the new node key to local store (overwrite)
-					err2 := ioutil.WriteFile("output.html", []byte(Key2.B58String()) , 0777)
-					if err2 != nil {
-						return "", err
-					}
-					return Key2, nil
-				}
+				fmt.Println("You published to IPNS. Your peer ID is ", output.Name)
+			}
+			
+			return Key, nil
+			
+		} else {
+			//[7] Initialize a new MerkleDAG node and key
+			var NewNode * merkledag.Node
+			var Key u.Key
+			//[8] Fill the node with user input
+			NewNode = makeStringNode(inputString)
+			//[10] Convert it into a key
+			Key = u.B58KeyDecode(pointsTo.B58String())
+			//[11] Get the Old MerkleDAG node and key
+			var OldNode * merkledag.Node
+			var Key2 u.Key
+			OldNode, _ = node.DAG.Get(Key)
+			//[12]Add a link to the old node
+	 		NewNode.AddNodeLink("next", OldNode)
+			//[13] Add thew new node to IPFS
+			Key2, _ = node.DAG.Add(NewNode)
+			// //publish to IPNS
+			output, err := commands.Publish(node, node.PrivateKey,Key2.B58String())
+			if err != nil {
+				fmt.Println(err)
+			} else {
+				fmt.Println("You published to IPNS. Your peer ID is ", output.Name)
+			}
+			return Key2, nil
+		}
+		
+
+	// //[2] If key is not stored locally, the user is new
+// 		if string(f) == "" {
+// 			//[3] Initialize a MerkleDAG node and key
+// 			var NewNode * merkledag.Node
+// 			var Key u.Key
+// 			//[4] Fill the node with user input
+// 			NewNode = makeStringNode(inputString)
+// 			//[5] Add the node to IPFS
+// 			Key, _ = node.DAG.Add(NewNode)
+// 			//[6] Add the user input key to local store
+// 			err := ioutil.WriteFile("output.html", []byte(Key.B58String()) , 0777)
+// 			if err != nil {
+// 				return "", err
+// 			}
+// 			// //publish to IPNS
+// 			output, err := commands.Publish(node, node.PrivateKey,Key.B58String())
+// 			if err != nil {
+// 				fmt.Println(err)
+// 			} else {
+// 				fmt.Println("You published to IPNS. Your peer ID is ", output.Name)
+// 			}
+//
+// 			return Key, nil
+// 			} else {
+// 					//[7] Initialize a new MerkleDAG node and key
+// 					var NewNode * merkledag.Node
+// 					var Key u.Key
+// 					//[8] Fill the node with user input
+// 					NewNode = makeStringNode(inputString)
+// 					//[9] Read the hash from the file
+// 			 		f,err := ioutil.ReadFile("output.html")
+// 					//[10] Convert it into a key
+// 					Key = u.B58KeyDecode(string(f))
+// 					//[11] Get the Old MerkleDAG node and key
+// 					var OldNode * merkledag.Node
+// 					var Key2 u.Key
+// 					OldNode, _ = node.DAG.Get(Key)
+// 					//[12]Add a link to the old node
+// 			 		NewNode.AddNodeLink("next", OldNode)
+// 					//[13] Add thew new node to IPFS
+// 					Key2, _ = node.DAG.Add(NewNode)
+// 					//[14] Add the new node key to local store (overwrite)
+// 					err2 := ioutil.WriteFile("output.html", []byte(Key2.B58String()) , 0777)
+// 					if err2 != nil {
+// 						return "", err
+// 					}
+// 					// //publish to IPNS
+// 					output, err := commands.Publish(node, node.PrivateKey,Key2.B58String())
+// 					if err != nil {
+// 						fmt.Println(err)
+// 					} else {
+// 						fmt.Println("You published to IPNS. Your peer ID is ", output.Name)
+// 					}
+// 					return Key2, nil
+// 				}
 }
 
 
@@ -172,13 +241,7 @@ func Pay(fee string, from_address string, to_address string, amount string, asse
 }
 
 func sendasset(fee_placeholder string, from_address string, to_address string, amount_placeholder string, asset_id_placeholder string) (string) {
-	   
-	//fee_placeholder 1000
-	//from_address 1zLkEoZF7Zdoso57h9si5fKxrKopnGSDn
-	//to_address akSjSW57xhGp86K6JFXXroACfRCw7SPv637
-	//amount 10
-	//asset_id AHthB6AQHaSS9VffkfMqTKTxVV43Dgst36
-	
+
 	
 	client := &http.Client{}
 	str := "{\n  \"fees\": fee_placeholder,\n  \"from\": \"from_address\",\n  \"to\": [\n    {\n      \"address\": \"to_address\",\n      \"amount\": \"amount_placeholder\",\n      \"asset_id\": \"asset_id_placeholder\"\n    }\n  ]\n}"
@@ -201,7 +264,7 @@ func sendasset(fee_placeholder string, from_address string, to_address string, a
 		resp, err := client.Do(req)
 
 		if err != nil {
-			fmt.Println("Errored when sending request to the server")
+			fmt.Println("Error when sending request to the server")
 		}
 
 		defer resp.Body.Close()
@@ -219,11 +282,7 @@ func sendasset(fee_placeholder string, from_address string, to_address string, a
 
 func signtransaction(hex_placeholder string, priv_key_placeholder string) (string) {
 		client := &http.Client{}
-		
-		//hex representation of unsigned transaction placeholder 0100000001d238c42ec059b8c7747cd51debb4310108f6279d14957472822cf061a660828b000000001976a914760fdb3483204406ddb73a45b20b7c9be61d0a7e88acffffffff0288130000000000001976a91430a5d35558ade668b8829a2a0f60a3f10358327e88ac306f0100000000001976a914760fdb3483204406ddb73a45b20b7c9be61d0a7e88ac00000000
-		
-		//private keys placeholder D8414E7062013DD24D3A3E71EFA8C72142A63F45E3B1AFA4653AFDFD9BC8D67E
-		
+
 		str := "{\n  \"transaction\": \"hex_placeholder\",\n  \"keys\": [\n    \"priv_key_placeholder\"\n  ]\n}"
 	    strings.Replace(str, "hex_placeholder", hex_placeholder, -1)
 	    strings.Replace(str, "priv_key_placeholder", priv_key_placeholder, -1)
@@ -245,14 +304,12 @@ func signtransaction(hex_placeholder string, priv_key_placeholder string) (strin
 		defer resp.Body.Close()
 		resp_body, _ := ioutil.ReadAll(resp.Body)
 
-		//fmt.Println(resp.Status)
-		//fmt.Println(string(resp_body))
 		return string(resp_body)
 	}
 
 func pushtransaction(input_placeholder string) (string) {
 	client := &http.Client{}
-	//placeholder string 0100000001d238c42ec059b8c7747cd51debb4310108f6279d14957472822cf061a660828b000000006b483045022100d326257244e8cb86889509cf5b4717edf273d9e6e643f571c434753059eb01a902204aa761f44e89b55af0e2fa0caef580401a4ba61eebf8bc29020ce23f6fab1ee2012102661ac805eef8015c7c8d617c65ef327c4f2272fd5d9e97456a0d32d3bcf6f563ffffffff0288130000000000001976a91430a5d35558ade668b8829a2a0f60a3f10358327e88ac306f0100000000001976a914760fdb3483204406ddb73a45b20b7c9be61d0a7e88ac00000000
+
     str := "\"input_placeholder\""
     strings.Replace(str, "input_placeholder", input_placeholder, -1)
 	
@@ -266,7 +323,7 @@ func pushtransaction(input_placeholder string) (string) {
 	resp, err := client.Do(req)
 
 	if err != nil {
-		fmt.Println("Errored when sending request to the server")
+		fmt.Println("Error when sending request to the server")
 	}
 
 	defer resp.Body.Close()
@@ -285,7 +342,7 @@ func GetBalance(my_address string) (float64) {
 	resp, err := client.Do(req)
 
 	if err != nil {
-		fmt.Println("Errored when sending request to the server")
+		fmt.Println("Error when sending request to the server")
 	}
 
 	defer resp.Body.Close()
