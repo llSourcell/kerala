@@ -46,31 +46,18 @@ func StartNode() (*core.IpfsNode, error) {
 
 
 func GetStrings(node *core.IpfsNode, userID string) ([]string, error) {
-	
-//	f,err := ioutil.ReadFile("output.html")
-	
-	
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// if string(f) == "" {
-	// 	return nil, nil
-	// } else {
-		// if(userID == "") {
-		// 	var Key = u.B58KeyDecode(string(f))
-		//     var tweetArray = resolveAllInOrder(node,Key)
-		// 	return tweetArray, nil
-		//
-		//
-		// } else {
+
 			var Key = u.B58KeyDecode(userID)
 		    var tweetArray = resolveAllInOrder(node,Key)
 			return tweetArray, nil
-			
-			
-			
-			//}
-//	}
+	
+}
+
+
+func GetDAG(node *core.IpfsNode, id string) (u.Key, error) {
+	
+	pointsTo, err := node.Namesys.Resolve(node.Context(), id)
+	return pointsTo, err
 	
 }
 
@@ -98,7 +85,6 @@ func resolveAllInOrder(nd * core.IpfsNode, k u.Key) []string {
 		node, err = node.Links[0].GetNode(nd.DAG)
 		if err != nil {
 			fmt.Println(err)
-			//return
 		}
 
 		fmt.Printf("%s ", string(node.Data[:]))
@@ -113,12 +99,7 @@ func resolveAllInOrder(nd * core.IpfsNode, k u.Key) []string {
 
 func AddString(node *core.IpfsNode, inputString string) (u.Key, error) {
 	
-	//[1] Check if key is stored locally
-	// f,err := ioutil.ReadFile("output.html")
-	//  	if err!=nil {
-	//   			return "", err
-	//   		}
-		
+
 		pointsTo, err := node.Namesys.Resolve(node.Context(), node.Identity.Pretty())
 		
 		//If there is an error, user is new and hasn't yet created a DAG.
@@ -167,61 +148,6 @@ func AddString(node *core.IpfsNode, inputString string) (u.Key, error) {
 		}
 		
 
-	// //[2] If key is not stored locally, the user is new
-// 		if string(f) == "" {
-// 			//[3] Initialize a MerkleDAG node and key
-// 			var NewNode * merkledag.Node
-// 			var Key u.Key
-// 			//[4] Fill the node with user input
-// 			NewNode = makeStringNode(inputString)
-// 			//[5] Add the node to IPFS
-// 			Key, _ = node.DAG.Add(NewNode)
-// 			//[6] Add the user input key to local store
-// 			err := ioutil.WriteFile("output.html", []byte(Key.B58String()) , 0777)
-// 			if err != nil {
-// 				return "", err
-// 			}
-// 			// //publish to IPNS
-// 			output, err := commands.Publish(node, node.PrivateKey,Key.B58String())
-// 			if err != nil {
-// 				fmt.Println(err)
-// 			} else {
-// 				fmt.Println("You published to IPNS. Your peer ID is ", output.Name)
-// 			}
-//
-// 			return Key, nil
-// 			} else {
-// 					//[7] Initialize a new MerkleDAG node and key
-// 					var NewNode * merkledag.Node
-// 					var Key u.Key
-// 					//[8] Fill the node with user input
-// 					NewNode = makeStringNode(inputString)
-// 					//[9] Read the hash from the file
-// 			 		f,err := ioutil.ReadFile("output.html")
-// 					//[10] Convert it into a key
-// 					Key = u.B58KeyDecode(string(f))
-// 					//[11] Get the Old MerkleDAG node and key
-// 					var OldNode * merkledag.Node
-// 					var Key2 u.Key
-// 					OldNode, _ = node.DAG.Get(Key)
-// 					//[12]Add a link to the old node
-// 			 		NewNode.AddNodeLink("next", OldNode)
-// 					//[13] Add thew new node to IPFS
-// 					Key2, _ = node.DAG.Add(NewNode)
-// 					//[14] Add the new node key to local store (overwrite)
-// 					err2 := ioutil.WriteFile("output.html", []byte(Key2.B58String()) , 0777)
-// 					if err2 != nil {
-// 						return "", err
-// 					}
-// 					// //publish to IPNS
-// 					output, err := commands.Publish(node, node.PrivateKey,Key2.B58String())
-// 					if err != nil {
-// 						fmt.Println(err)
-// 					} else {
-// 						fmt.Println("You published to IPNS. Your peer ID is ", output.Name)
-// 					}
-// 					return Key2, nil
-// 				}
 }
 
 
@@ -358,5 +284,31 @@ func GetBalance(my_address string) (float64) {
 	fmt.Println("NUM" , num.(float64))
 
 	return num.(float64)
+}
+
+func GenerateAddress() (string) {
+	client := &http.Client{}
+
+	body := []byte("{\n  \"alias\": \"address label\"\n}")
+
+	req, _ := http.NewRequest("POST", "https://private-anon-e4123b065-coinprism.apiary-mock.com/v1/account/createaddress", bytes.NewBuffer(body))
+
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("X-Coinprism-Username", "username")
+	req.Header.Add("X-Coinprism-Password", "account-password")
+
+	resp, err := client.Do(req)
+
+	if err != nil {
+		fmt.Println("Errored when sending request to the server")
+		return
+	}
+
+	defer resp.Body.Close()
+	resp_body, _ := ioutil.ReadAll(resp.Body)
+
+	fmt.Println(resp.Status)
+	return string(resp_body)
+}
 }
 
