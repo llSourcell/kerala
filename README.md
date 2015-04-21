@@ -8,7 +8,7 @@
 
 Kerala offers a an easy-to-use wrapper to store and retrieve links on the Interplanetary File System. (IPFS) I created this library to aid me in creating a decentralized twitter. It can be used for any sort of decentralized application that stores user tweets/posts/microblogs.
 
-Kerala
+Kerala lets you...
 
 
 Add data to IPFS.<br />
@@ -20,10 +20,10 @@ Pay anyone with dapp assets<br />
 
 TODO
 
--Implement IPFS Keystore for encrypting data and sharing it with trusted nodes.
--Namecoin registration for PeerIDs
+-Implement IPFS Keystore for encrypting data and sharing it with trusted nodes. <br />
+-Namecoin registration for PeerIDs<br />
 
-All pull requests, issue creation, and advice are welcome. 
+#All pull requests, issue creation, and advice are welcome. 
 
 ## Install
 
