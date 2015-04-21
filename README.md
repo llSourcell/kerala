@@ -11,11 +11,19 @@ Kerala offers a an easy-to-use wrapper to store and retrieve links on the Interp
 Kerala
 
 
--Converts a user's string input into an IPFS Hash<br />
--Saves the hash to a text file locally<br />
--Takes new string submissions with their associated hashes and links them. It will replace the hash in the local text file with the newest hash, thus creating what is known in IPFS as a MerkleDAG. <br />
--Pulls all users strings using only there single hash stored in their local textfile. The MerkleDAG link in IPFS allows the user to pull all linked strings in a single request<br />
->>>>>>> 9676a9c4b9f018c8a814e2bec6e39751b3977953
+Add data to IPFS.<br />
+Retrieve data from IPFS.<br />
+Resolve a peerID to get their data address<br />
+Generate your own dapp asset address<br />
+Pay anyone with dapp assets<br />
+
+
+TODO
+
+-Implement IPFS Keystore for encrypting data and sharing it with trusted nodes.
+-Namecoin registration for PeerIDs
+
+All pull requests, issue creation, and advice are welcome. 
 
 ## Install
 
@@ -38,7 +46,18 @@ node, err := kerala.StartNode()
 var userInput = r.Form["sometext"]
 Key, err := kerala.AddString(node, userInput[0])
 
+//Resolve PeerID to get MerkleDAG
+pointsTo, err := kerala.GetDAG(node, node.Identity.Pretty())
+
 //Get all your text from IPFS (Retrieves MerkleDAG)  
-tweetArray, _ := kerala.GetStrings(node)
-  
-```
+tweetArray, err := kerala.GetStrings(node, pointsTo.B58String())
+
+//Pay another node (Arguments are - fee, your address, their address, amount, asset address, private keys)
+hash := kerala.Pay("1000","1HihKUXo6UEjJzm4DZ9oQFPu2uVc9YK9Wh", "akSjSW57xhGp86K6JFXXroACfRCw7SPv637", "10", "AHthB6AQHaSS9VffkfMqTKTxVV43Dgst36", "L1jftH241t2rhQSTrru9Vd2QumX4VuGsPhVfSPvibc4TYU4aGdaa" )
+
+//Generate an asset address
+address := kerala.GenerateAddress()
+
+//Get your current balance
+balance := kerala.GetBalance("1HihKUXo6UEjJzm4DZ9oQFPu2uVc9YK9Wh")
+
